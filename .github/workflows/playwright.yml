@@ -1,31 +1,81 @@
-name: Playwright Tests
+name: Playwright C# Tests
 
 on:
+
   push:
+
     branches:
+
       - main
+
   pull_request:
+
     branches:
+
       - main
 
 jobs:
+
   test:
+
+    strategy:
+
+      fail-fast: false
+
+      matrix:
+
+        browser:
+
+          - chromium
+
+          - firefox
+
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+
+      - name: Checkout repository
+
         uses: actions/checkout@v4
 
-      - name: Setup .NET
+      - name: Setup .NET 8
+
         uses: actions/setup-dotnet@v4
+
         with:
+
           dotnet-version: '8.0.x'
 
-      - name: Build Project
-        run: dotnet build
+      - name: Restore dependencies
 
-      - name: Install Playwright Browsers and Dependencies
-        run: pwsh bin/Debug/net8.0/playwright.ps1 install --with-deps
+        run: dotnet restore
 
-      - name: Run Tests
-        run: dotnet test
+      - name: Build project
+
+        run: dotnet build --no-restore
+
+      - name: Install Playwright ${{ matrix.browser }}
+
+        run: pwsh bin/Debug/net8.0/playwright.ps1 install ${{ matrix.browser }} --with-deps
+
+      - name: Run full Playwright test suite
+
+        env:
+
+          BROWSER: ${{ matrix.browser }}
+
+        run: dotnet test --no-build --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
+
+      - name: Upload test results
+
+        if: always()
+
+        uses: actions/upload-artifact@v4
+
+        with:
+
+          name: test-results-${{ matrix.browser }}
+
+          path: TestResults
+
+          if-no-files-found: warn
