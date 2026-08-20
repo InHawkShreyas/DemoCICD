@@ -16,8 +16,8 @@ jobs:
       - name: Restore NuGet packages
         run: dotnet restore
       - name: Build Playwright project
-        run: dotnet build YourPlaywrightProject.csproj --configuration Release
+        run: dotnet build PlaywrightPipelineDemo.csproj --configuration Release
       - name: Install Playwright browsers and dependencies
         run: pwsh bin/Release/net8.0/playwright.ps1 install --with-deps
       - name: Run Playwright tests
-        run: dotnet test YourPlaywrightProject.csproj --configuration Release --no-build
+        run: dotnet test PlaywrightPipelineDemo.csproj --configuration Release --no-build
