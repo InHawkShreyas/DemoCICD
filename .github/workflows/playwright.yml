@@ -7,11 +7,12 @@ on:
 
 env:
   DOTNET_VERSION: '8.0.x'
+  TARGET_FRAMEWORK: 'net8.0'
   BUILD_CONFIGURATION: 'Release'
-  PROJECT_PATH: 'PlaywrightPipelineDemo.csproj'
+  PROJECT_PATH: 'YourPlaywrightProject.csproj'
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,10 +28,35 @@ jobs:
         run: dotnet restore ${{ env.PROJECT_PATH }}
 
       - name: Build Playwright project
-        run: dotnet build ${{ env.PROJECT_PATH }} --configuration ${{ env.BUILD_CONFIGURATION }}
+        run: dotnet build ${{ env.PROJECT_PATH }} --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
+
+      - name: Upload build output
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-build
+          path: bin/${{ env.BUILD_CONFIGURATION }}/${{ env.TARGET_FRAMEWORK }}
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Download build output
+        uses: actions/download-artifact@v4
+        with:
+          name: playwright-build
+          path: bin/${{ env.BUILD_CONFIGURATION }}/${{ env.TARGET_FRAMEWORK }}
 
       - name: Install Playwright browsers and dependencies
-        run: pwsh bin/${{ env.BUILD_CONFIGURATION }}/net8.0/playwright.ps1 install --with-deps
+        run: pwsh bin/${{ env.BUILD_CONFIGURATION }}/${{ env.TARGET_FRAMEWORK }}/playwright.ps1 install --with-deps
 
       - name: Run Playwright tests
         env:
