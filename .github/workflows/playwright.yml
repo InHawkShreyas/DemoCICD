@@ -33,8 +33,9 @@ jobs:
       - name: Upload build output
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-build
-          path: bin/${{ env.BUILD_CONFIGURATION }}/${{ env.TARGET_FRAMEWORK }}
+         name: playwright-build
+         path: bin/${{ env.BUILD_CONFIGURATION }}/${{ env.TARGET_FRAMEWORK }}
+         include-hidden-files: true
 
   test:
     needs: build
