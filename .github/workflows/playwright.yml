@@ -9,7 +9,7 @@ env:
   DOTNET_VERSION: '8.0.x'
   TARGET_FRAMEWORK: 'net8.0'
   BUILD_CONFIGURATION: 'Release'
-  PROJECT_PATH: 'YourPlaywrightProject.csproj'
+  PROJECT_PATH: 'PlaywrightPipelineDemo.csproj'
 
 jobs:
   build:
