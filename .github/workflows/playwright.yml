@@ -33,9 +33,9 @@ jobs:
       - name: Upload build output
         uses: actions/upload-artifact@v4
         with:
-         name: playwright-build
-         path: bin/${{ env.BUILD_CONFIGURATION }}/${{ env.TARGET_FRAMEWORK }}
-         include-hidden-files: true
+          name: playwright-build
+          path: bin/${{ env.BUILD_CONFIGURATION }}/${{ env.TARGET_FRAMEWORK }}
+          include-hidden-files: true
 
   test:
     needs: build
@@ -55,6 +55,9 @@ jobs:
         with:
           name: playwright-build
           path: bin/${{ env.BUILD_CONFIGURATION }}/${{ env.TARGET_FRAMEWORK }}
+
+      - name: Restore Playwright executable permissions
+        run: chmod +x bin/${{ env.BUILD_CONFIGURATION }}/${{ env.TARGET_FRAMEWORK }}/.playwright/node/linux-x64/node
 
       - name: Install Playwright browsers and dependencies
         run: pwsh bin/${{ env.BUILD_CONFIGURATION }}/${{ env.TARGET_FRAMEWORK }}/playwright.ps1 install --with-deps
