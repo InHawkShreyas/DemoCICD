@@ -1,23 +1,38 @@
 name: Playwright CI
+
 on:
   push:
     branches:
       - main
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  BUILD_CONFIGURATION: 'Release'
+  PROJECT_PATH: 'PlaywrightPipelineDemo.csproj'
+
 jobs:
   test:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Setup .NET 8
+
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
       - name: Restore NuGet packages
-        run: dotnet restore
+        run: dotnet restore ${{ env.PROJECT_PATH }}
+
       - name: Build Playwright project
-        run: dotnet build PlaywrightPipelineDemo.csproj --configuration Release
+        run: dotnet build ${{ env.PROJECT_PATH }} --configuration ${{ env.BUILD_CONFIGURATION }}
+
       - name: Install Playwright browsers and dependencies
-        run: pwsh bin/Release/net8.0/playwright.ps1 install --with-deps
+        run: pwsh bin/${{ env.BUILD_CONFIGURATION }}/net8.0/playwright.ps1 install --with-deps
+
       - name: Run Playwright tests
-        run: dotnet test PlaywrightPipelineDemo.csproj --configuration Release --no-build
+        env:
+          BASE_URL: ${{ secrets.BASE_URL }}
+        run: dotnet test ${{ env.PROJECT_PATH }} --configuration ${{ env.BUILD_CONFIGURATION }} --no-build
