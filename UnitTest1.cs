@@ -14,7 +14,7 @@ public class SauceDemoTests : PageTest
         await Page.GotoAsync("https://www.saucedemo.com/");
 
         // Fill out the login form
-        await Page.Locator("[data-test='username']").FillAsync("standard_user");
+        await Page.Locator("[data-test='username']").FillAsync("standard_users");
         await Page.Locator("[data-test='password']").FillAsync("secret_sauce");
         await Page.Locator("[data-test='login-button']").ClickAsync();
 
