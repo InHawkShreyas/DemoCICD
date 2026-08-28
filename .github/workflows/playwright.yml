@@ -57,6 +57,15 @@ jobs:
 
   test:
     needs: build
+
+    strategy:
+      fail-fast: false
+      matrix:
+        browser:
+          - chromium
+          - firefox
+          - webkit
+
     runs-on: ubuntu-latest
 
     steps:
@@ -81,9 +90,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('PlaywrightPipelineDemo.csproj') }}
+          key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('PlaywrightPipelineDemo.csproj') }}
           restore-keys: |
-            playwright-${{ runner.os }}-
+            playwright-${{ runner.os }}-${{ matrix.browser }}-
 
       - name: Install Playwright browsers and dependencies
         run: pwsh bin/${{ env.BUILD_CONFIGURATION }}/${{ env.TARGET_FRAMEWORK }}/playwright.ps1 install --with-deps
@@ -91,19 +100,20 @@ jobs:
       - name: Run Playwright tests
         env:
           BASE_URL: ${{ secrets.BASE_URL }}
+          BROWSER: ${{ matrix.browser }}
         run: >
           dotnet test ${{ env.PROJECT_PATH }}
           --configuration ${{ env.BUILD_CONFIGURATION }}
           --no-build
-          --logger "trx;LogFileName=test-results.trx"
+          --logger "trx;LogFileName=${{ matrix.browser }}-test-results.trx"
           --results-directory test-results
 
       - name: Publish test results
         if: always()
         uses: dorny/test-reporter@v1
         with:
-          name: Playwright Test Results
-          path: test-results/*.trx
+          name: Playwright Test Results - ${{ matrix.browser }}
+          path: test-results/${{ matrix.browser }}-test-results.trx
           reporter: dotnet-trx
           fail-on-error: true
 
@@ -111,6 +121,6 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-failure-artifacts
+          name: playwright-failure-artifacts-${{ matrix.browser }}
           path: bin/${{ env.BUILD_CONFIGURATION }}/${{ env.TARGET_FRAMEWORK }}/test-results/playwright/
           if-no-files-found: warn
