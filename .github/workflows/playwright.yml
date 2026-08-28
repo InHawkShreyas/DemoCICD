@@ -77,6 +77,14 @@ jobs:
       - name: Restore Playwright executable permissions
         run: chmod +x bin/${{ env.BUILD_CONFIGURATION }}/${{ env.TARGET_FRAMEWORK }}/.playwright/node/linux-x64/node
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('PlaywrightPipelineDemo.csproj') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
       - name: Install Playwright browsers and dependencies
         run: pwsh bin/${{ env.BUILD_CONFIGURATION }}/${{ env.TARGET_FRAMEWORK }}/playwright.ps1 install --with-deps
 
