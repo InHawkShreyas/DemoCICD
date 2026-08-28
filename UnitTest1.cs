@@ -76,6 +76,6 @@ public class SauceDemoTests : PageTest
         var title = Page.Locator(".title");
 
         await Expect(title)
-            .ToHaveTextAsync("WRONG_TEXT");
+            .ToHaveTextAsync("Products");
     }
 }
