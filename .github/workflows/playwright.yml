@@ -75,4 +75,26 @@ jobs:
       - name: Run Playwright tests
         env:
           BASE_URL: ${{ secrets.BASE_URL }}
-        run: dotnet test ${{ env.PROJECT_PATH }} --configuration ${{ env.BUILD_CONFIGURATION }} --no-build
+        run: >
+          dotnet test ${{ env.PROJECT_PATH }}
+          --configuration ${{ env.BUILD_CONFIGURATION }}
+          --no-build
+          --logger "trx;LogFileName=test-results.trx"
+          --results-directory test-results
+
+      - name: Publish test results
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Playwright Test Results
+          path: test-results/*.trx
+          reporter: dotnet-trx
+          fail-on-error: true
+
+      - name: Upload Playwright failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-failure-artifacts
+          path: test-results/playwright/
+          if-no-files-found: warn
