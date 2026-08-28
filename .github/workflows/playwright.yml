@@ -96,5 +96,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-failure-artifacts
-          path: test-results/playwright/
+          path: bin/${{ env.BUILD_CONFIGURATION }}/${{ env.TARGET_FRAMEWORK }}/test-results/playwright/
           if-no-files-found: warn
