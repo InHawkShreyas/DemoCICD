@@ -11,6 +11,9 @@ on:
 
   workflow_dispatch:
 
+  schedule:
+    - cron: '0 2 * * 1-5'
+
 concurrency:
   group: playwright-${{ github.ref }}
   cancel-in-progress: true
@@ -22,6 +25,7 @@ env:
   PROJECT_PATH: 'PlaywrightPipelineDemo.csproj'
 
 jobs:
+
   build:
     runs-on: ubuntu-latest
 
@@ -77,25 +81,12 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Download build output
-        uses: actions/download-artifact@v4
+      - name: Setup Playwright
+        uses: ./.github/actions/setup-playwright
         with:
-          name: playwright-build
-          path: bin/${{ env.BUILD_CONFIGURATION }}/${{ env.TARGET_FRAMEWORK }}
-
-      - name: Restore Playwright executable permissions
-        run: chmod +x bin/${{ env.BUILD_CONFIGURATION }}/${{ env.TARGET_FRAMEWORK }}/.playwright/node/linux-x64/node
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('PlaywrightPipelineDemo.csproj') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-${{ matrix.browser }}-
-
-      - name: Install Playwright browsers and dependencies
-        run: pwsh bin/${{ env.BUILD_CONFIGURATION }}/${{ env.TARGET_FRAMEWORK }}/playwright.ps1 install --with-deps
+          build-configuration: ${{ env.BUILD_CONFIGURATION }}
+          target-framework: ${{ env.TARGET_FRAMEWORK }}
+          browser: ${{ matrix.browser }}
 
       - name: Run Playwright tests
         env:
@@ -124,3 +115,14 @@ jobs:
           name: playwright-failure-artifacts-${{ matrix.browser }}
           path: bin/${{ env.BUILD_CONFIGURATION }}/${{ env.TARGET_FRAMEWORK }}/test-results/playwright/
           if-no-files-found: warn
+
+      - name: Notify Slack about scheduled failure
+        if: failure() && github.event_name == 'schedule'
+        uses: slackapi/slack-github-action@v2
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "🚨 Playwright scheduled test failure\nBranch: ${{ github.ref_name }}\nBrowser: ${{ matrix.browser }}\nWorkflow: ${{ github.workflow }}\nRun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }

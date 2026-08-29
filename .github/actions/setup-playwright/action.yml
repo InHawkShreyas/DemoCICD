@@ -1,0 +1,42 @@
+name: Setup Playwright
+
+description: Download the Playwright build, restore permissions, cache browsers, and install browsers
+
+inputs:
+  build-configuration:
+    description: Build configuration
+    required: true
+
+  target-framework:
+    description: Target framework
+    required: true
+
+  browser:
+    description: Browser used by the current matrix job
+    required: true
+
+runs:
+  using: composite
+
+  steps:
+    - name: Download build output
+      uses: actions/download-artifact@v4
+      with:
+        name: playwright-build
+        path: bin/${{ inputs.build-configuration }}/${{ inputs.target-framework }}
+
+    - name: Restore Playwright executable permissions
+      shell: bash
+      run: chmod +x bin/${{ inputs.build-configuration }}/${{ inputs.target-framework }}/.playwright/node/linux-x64/node
+
+    - name: Cache Playwright browsers
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ inputs.browser }}-${{ hashFiles('PlaywrightPipelineDemo.csproj') }}
+        restore-keys: |
+          playwright-${{ runner.os }}-${{ inputs.browser }}-
+
+    - name: Install Playwright browsers and dependencies
+      shell: pwsh
+      run: ./bin/${{ inputs.build-configuration }}/${{ inputs.target-framework }}/playwright.ps1 install --with-deps
